@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programme Sport Doux — Brugada</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0eb;
+    --surface: #fffdf9;
+    --warm: #c8b89a;
+    --accent: #7a9e8e;
+    --danger: #c97b6a;
+    --text: #2d2820;
+    --muted: #8a7f74;
+    --pause: #8aadcc;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--danger);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 6vw, 38px);
+    line-height: 1.15;
+    color: var(--text);
+  }
+  header h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  header p {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    background: #fff3f0;
+    border-left: 3px solid var(--danger);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #6b3328;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+  .disclaimer strong { display: block; margin-bottom: 4px; font-size: 13px; }
+
+  /* STATS BAR */
+  .stats {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    flex: 1;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #e8e0d6;
+  }
+  .stat-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+  }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* TIMER CARD */
+  .timer-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid #e8e0d6;
+    padding: 28px 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: background .4s;
+  }
+  .timer-card.is-pause { background: #f0f6fb; border-color: #c2d8ea; }
+  .timer-card.is-warmup { background: #fef8f0; }
+  .timer-card.is-exercise { background: #f2f7f4; }
+  .timer-card.is-done { background: #f4f7f2; }
+
+  .step-phase {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .step-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(20px, 5vw, 28px);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .step-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    max-width: 280px;
+    margin: 0 auto 18px;
+  }
+
+  /* CIRCLE TIMER */
+  .ring-wrap {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    margin: 0 auto 18px;
+  }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: #e8e0d6; stroke-width: 6; }
+  .ring-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 339.3;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset .9s linear, stroke .4s;
+  }
+  .is-pause .ring-fill { stroke: var(--pause); }
+  .is-warmup .ring-fill { stroke: var(--warm); }
+  .ring-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .ring-time {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--text);
+  }
+  .ring-sub { font-size: 11px; color: var(--muted); }
+
+  /* NEXT UP */
+  .next-up {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .next-up span { color: var(--text); font-weight: 500; }
+
+  /* CONTROLS */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: #e8e0d6; color: var(--text); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* PROGRAMME LIST */
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+  .steps-list { display: flex; flex-direction: column; gap: 8px; }
+  .step-item {
+    background: var(--surface);
+    border: 1px solid #e8e0d6;
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color .3s, background .3s;
+    opacity: .6;
+  }
+  .step-item.active {
+    border-color: var(--accent);
+    background: #f2f7f4;
+    opacity: 1;
+    box-shadow: 0 0 0 3px #7a9e8e22;
+  }
+  .step-item.done { opacity: .35; }
+  .step-item.is-pause-item { border-left: 3px solid var(--pause); }
+  .step-item.is-warmup-item { border-left: 3px solid var(--warm); }
+  .step-item.is-exercise-item { border-left: 3px solid var(--accent); }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e8e0d6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+  .step-item.active .step-num { background: var(--accent); color: #fff; }
+  .step-item.done .step-num { background: #c8d8c8; color: #6a8a6a; }
+  .step-info { flex: 1; }
+  .step-info-name { font-size: 14px; font-weight: 500; }
+  .step-info-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .step-dur {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  /* TIPS */
+  .tips {
+    margin-top: 32px;
+    background: #fef8f0;
+    border-radius: var(--radius);
+    border: 1px solid #e8d8c0;
+    padding: 16px;
+  }
+  .tips h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #7a5c30;
+  }
+  .tips ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .tips li { font-size: 13px; color: #6b5030; line-height: 1.5; padding-left: 18px; position: relative; }
+  .tips li::before { content: '♡'; position: absolute; left: 0; font-size: 11px; top: 1px; }
+
+  /* DONE SCREEN */
+  .done-msg {
+    text-align: center;
+    padding: 10px 0 4px;
+  }
+  .done-msg .emoji { font-size: 36px; display: block; margin-bottom: 8px; }
+  .done-msg p { font-size: 14px; color: var(--muted); }
+
+  @media (min-width: 480px) {
+    body { max-width: 420px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">Syndrome de Brugada · Intensité très légère</div>
+  <h1>Programme <em>doux</em><br>poids de corps</h1>
+  <p>30 min · pauses intégrées · fréquence cardiaque basse</p>
+</header>
+
+<div class="disclaimer">
+  <strong>⚠ Avis médical obligatoire</strong>
+  Ce programme est une suggestion générale. Consultez impérativement votre cardiologue avant de débuter tout exercice. Arrêtez immédiatement si palpitations, essoufflement anormal, douleur thoracique ou malaise.
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-val" id="totalTime">30<span style="font-size:14px">min</span></div>
+    <div class="stat-label">Durée totale</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="exerciseCount">9</div>
+    <div class="stat-label">Exercices</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="pauseCount">9</div>
+    <div class="stat-label">Pauses</div>
+  </div>
+</div>
+
+<div class="timer-card" id="timerCard">
+  <div class="step-phase" id="stepPhase">Prêt·e ?</div>
+  <div class="step-name" id="stepName">Appuyez sur Démarrer</div>
+  <div class="step-desc" id="stepDesc">Le programme démarrera par 5 min d'échauffement doux.</div>
+  <div class="ring-wrap">
+    <svg width="130" height="130" viewBox="0 0 130 130">
+      <circle class="ring-bg" cx="65" cy="65" r="54"/>
+      <circle class="ring-fill" id="ringFill" cx="65" cy="65" r="54"/>
+    </svg>
+    <div class="ring-text">
+      <div class="ring-time" id="ringTime">—</div>
+      <div class="ring-sub" id="ringSub">sec</div>
+    </div>
+  </div>
+  <div class="next-up" id="nextUp"></div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-secondary" id="btnPrev" disabled onclick="prevStep()">◂ Préc.</button>
+  <button class="btn btn-primary" id="btnPlay" onclick="togglePlay()">▶ Démarrer</button>
+  <button class="btn btn-secondary" id="btnNext" onclick="nextStep()">Suiv. ▸</button>
+</div>
+
+<h2>Programme complet</h2>
+<div class="steps-list" id="stepsList"></div>
+
+<div class="tips">
+  <h3>Consignes importantes</h3>
+  <ul>
+    <li>Gardez la respiration lente et régulière en permanence.</li>
+    <li>N'allez jamais au-delà de 50–60 % de votre fréquence cardiaque max.</li>
+    <li>Si vous sentez le cœur s'emballer : arrêtez, asseyez-vous, respirez.</li>
+    <li>Évitez les efforts par forte chaleur ou après un repas.</li>
+    <li>Ayez toujours votre téléphone et une personne de confiance à proximité.</li>
+    <li>Hydratez-vous avant, pendant et après la séance.</li>
+    <li>En cas de défibrillateur implantable (DAI), vérifiez les autorisations sportives avec votre médecin.</li>
+  </ul>
+</div>
+
+<script>
+const steps = [
+  // ÉCHAUFFEMENT
+  { name: "Marche sur place", phase: "Échauffement", type: "warmup", dur: 120, desc: "Levez doucement les genoux, balancez les bras. Respiration lente." },
+  { name: "Pause · Respiration", phase: "Pause", type: "pause", dur: 60, desc: "Inspirez 4 sec, expirez 6 sec. Sentez votre rythme cardiaque." },
+  { name: "Rotations d'épaules & cou", phase: "Échauffement", type: "warmup", dur: 90, desc: "Cercles lents des épaules vers l'avant et l'arrière. Demi-cercles doux du cou." },
+  { name: "Pause · Hydratation", phase: "Pause", type: "pause", dur: 60, desc: "Buvez quelques gorgées. Respirez calmement." },
+
+  // EXERCICES PRINCIPAUX
+  { name: "Squats très lents", phase: "Exercice 1", type: "exercise", dur: 60, desc: "Descendez en 3 sec, remontez en 3 sec. 8–10 répétitions max. Dos droit." },
+  { name: "Pause active · Marche lente", phase: "Pause", type: "pause", dur: 90, desc: "Marchez sur place très lentement pour ramener le cœur au calme." },
+  { name: "Relevés de mollets debout", phase: "Exercice 2", type: "exercise", dur: 60, desc: "Montez sur la pointe des pieds, redescendez. Lent et contrôlé. Tenez un mur si besoin." },
+  { name: "Pause · Respiration profonde", phase: "Pause", type: "pause", dur: 75, desc: "Inspirez par le nez, expirez lentement par la bouche." },
+  { name: "Pompes sur les genoux", phase: "Exercice 3", type: "exercise", dur: 60, desc: "Genoux au sol, corps aligné. 6–8 répétitions lentes. Ne bloquez pas la respiration." },
+  { name: "Pause · Repos assis", phase: "Pause", type: "pause", dur: 90, desc: "Asseyez-vous. Respirez normalement. Vérifiez votre ressenti." },
+  { name: "Superman (sol)", phase: "Exercice 4", type: "exercise", dur: 60, desc: "Allongée sur le ventre, levez doucement un bras + la jambe opposée. Alternez." },
+  { name: "Pause · Respiration", phase: "Pause", type: "pause", dur: 60, desc: "Restez allongée ou assise. Inspirez profondément." },
+  { name: "Pont fessier (Glute bridge)", phase: "Exercice 5", type: "exercise", dur: 60, desc: "Sur le dos, pieds à plat. Soulevez le bassin lentement. 8 répétitions." },
+  { name: "Pause · Étirement doux", phase: "Pause", type: "pause", dur: 75, desc: "Ramenez les genoux sur la poitrine, tenez doucement. Relâchez la tension." },
+
+  // RENFORCEMENT LÉGER
+  { name: "Bird-dog (4 pattes)", phase: "Exercice 6", type: "exercise", dur: 60, desc: "À 4 pattes, bras droit + jambe gauche en extension lente. Alternez. Gainage doux." },
+  { name: "Pause · Hydratation", phase: "Pause", type: "pause", dur: 60, desc: "Buvez. Respirez. Ressentez votre corps." },
+  { name: "Fentes statiques très lentes", phase: "Exercice 7", type: "exercise", dur: 60, desc: "Un pied devant, pliez doucement les genoux. 5 répétitions de chaque côté." },
+  { name: "Pause · Marche lente", phase: "Pause", type: "pause", dur: 90, desc: "Marchez dans la pièce à pas très lents. Bras détendus." },
+
+  // RETOUR AU CALME
+  { name: "Étirements — bas du dos", phase: "Retour au calme", type: "warmup", dur: 90, desc: "Allongée, genoux au sol, basculez doucement d'un côté puis de l'autre." },
+  { name: "Étirements — jambes", phase: "Retour au calme", type: "warmup", dur: 90, desc: "Tendez une jambe, fléchissez le pied. Maintenez 20 sec. Changez de côté." },
+  { name: "Respiration finale", phase: "Fin de séance", type: "pause", dur: 120, desc: "Allongée sur le dos, posez une main sur le ventre. Respirez lentement et profondément." },
+];
+
+let current = 0;
+let timeLeft = 0;
+let playing = false;
+let interval = null;
+const CIRCUM = 2 * Math.PI * 54;
+
+function fmt(s) {
+  if (s >= 60) return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+  return s + '';
+}
+
+function typeClass(t) {
+  if (t==='pause') return 'is-pause';
+  if (t==='warmup') return 'is-warmup';
+  return 'is-exercise';
+}
+
+function renderList() {
+  const list = document.getElementById('stepsList');
+  list.innerHTML = steps.map((s,i) => `
+    <div class="step-item ${i===current?'active':''} ${i<current?'done':''} is-${s.type}-item" id="si${i}">
+      <div class="step-num">${i<current?'✓':i+1}</div>
+      <div class="step-info">
+        <div class="step-info-name">${s.name}</div>
+        <div class="step-info-meta">${s.phase}</div>
+      </div>
+      <div class="step-dur">${s.dur>=60?Math.floor(s.dur/60)+'m'+(s.dur%60?String(s.dur%60)+'s':''):s.dur+'s'}</div>
+    </div>
+  `).join('');
+}
+
+function updateTimer() {
+  const s = steps[current];
+  const card = document.getElementById('timerCard');
+  card.className = 'timer-card ' + typeClass(s.type);
+  document.getElementById('stepPhase').textContent = s.phase;
+  document.getElementById('stepName').textContent = s.name;
+  document.getElementById('stepDesc').textContent = s.desc;
+
+  const t = timeLeft;
+  document.getElementById('ringTime').textContent = t >= 60 ? Math.floor(t/60)+':'+String(t%60).padStart(2,'0') : t;
+  document.getElementById('ringSub').textContent = t >= 60 ? 'min' : 'sec';
+
+  const fill = document.getElementById('ringFill');
+  const pct = timeLeft / s.dur;
+  fill.style.strokeDashoffset = CIRCUM * (1 - pct);
+
+  const next = steps[current+1];
+  document.getElementById('nextUp').innerHTML = next
+    ? `Suivant : <span>${next.name}</span> (${next.dur>=60?Math.floor(next.dur/60)+'m'+(next.dur%60?String(next.dur%60)+'s':''):next.dur+'s'})`
+    : '';
+
+  document.getElementById('btnPrev').disabled = current === 0 && !playing;
+}
+
+function goToStep(i) {
+  clearInterval(interval);
+  playing = false;
+  current = i;
+  timeLeft = steps[i].dur;
+  document.getElementById('btnPlay').textContent = '▶ Démarrer';
+  updateTimer();
+  renderList();
+  document.getElementById('si'+i).scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function togglePlay() {
+  if (current >= steps.length) { goToStep(0); return; }
+  playing = !playing;
+  document.getElementById('btnPlay').textContent = playing ? '⏸ Pause' : '▶ Reprendre';
+  if (playing) {
+    interval = setInterval(() => {
+      timeLeft--;
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        if (current + 1 < steps.length) {
+          current++;
+          timeLeft = steps[current].dur;
+          renderList();
+          const card = document.getElementById('timerCard');
+          card.style.opacity = '0';
+          setTimeout(() => { card.style.opacity = '1'; }, 200);
+          interval = setInterval(arguments.callee, 1000);
+          document.getElementById('si'+current).scrollIntoView({behavior:'smooth',block:'nearest'});
+        } else {
+          playing = false;
+          document.getElementById('btnPlay').textContent = '↺ Recommencer';
+          document.getElementById('timerCard').className = 'timer-card is-done';
+          document.getElementById('stepPhase').textContent = 'Séance terminée';
+          document.getElementById('stepName').textContent = 'Bravo ! ✨';
+          document.getElementById('stepDesc').textContent = 'Vous avez terminé votre séance. Reposez-vous et hydratez-vous.';
+          document.getElementById('ringTime').textContent = '✓';
+          document.getElementById('nextUp').textContent = '';
+          renderList();
+          return;
+        }
+      }
+      updateTimer();
+    }, 1000);
+  } else {
+    clearInterval(interval);
+  }
+}
+
+function nextStep() {
+  if (current + 1 < steps.length) goToStep(current + 1);
+}
+function prevStep() {
+  if (current > 0) goToStep(current - 1);
+}
+
+// Init
+goToStep(0);
+document.getElementById('ringTime').textContent = '—';
+document.getElementById('ringSub').textContent = '';
+document.getElementById('ringFill').style.strokeDashoffset = 0;
+</script>
+</body>
+</html>
